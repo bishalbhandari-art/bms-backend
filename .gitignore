@@ -1,0 +1,7 @@
+.vscode/
+*.session.sql
+.env
+.env.*
+.DS_Store
+Thumbs.db
+*.log
