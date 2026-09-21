@@ -7,6 +7,8 @@
 -- ── SELECT: all books ──
 SELECT *
 FROM books;
+SELECT *
+FROM authors ORDER BY author_id;
 -- ── SELECT: specific columns ──
 SELECT title,
     isbn,
@@ -64,44 +66,18 @@ FROM categories AS c
     INNER JOIN books AS b ON c.category_id = b.category_id
 GROUP BY c.name
 ORDER BY total_books DESC;
+---- 1. Start the transaction block
+BEGIN;
 -- ── UPDATE: change an author's email ──
 UPDATE authors
 SET email = 'george.orwell@literature.com'
-WHERE author_id = 2;
--- Verify the update
-SELECT *
-FROM authors
-WHERE author_id = 2;
--- Revert
-UPDATE authors
-SET email = 'orwell@example.com'
-WHERE author_id = 2;
--- ── DELETE: remove a book ──
+WHERE author_id = 2
+RETURNING *;
+-- ── DELETE: remove a book ── & using returning is refer to the which row has been deleted 
 DELETE FROM books
-WHERE id = 14;
--- Verify the delete
-SELECT *
-FROM books
-WHERE id = 9;
--- Restore the deleted book
-INSERT INTO books(
-        title,
-        isbn,
-        publish_date,
-        book_type,
-        page_count,
-        file_size,
-        author_id,
-        category_id
-    )
-VALUES (
-        'Go Set a Watchman',
-        '978-0-0624-0986-0',
-        '2015-07-14',
-        'EBook',
-        278,
-        '2.8 MB',
-        4,
-        1
-    );
-    SELECT * FROM books ;
+WHERE id = 9
+RETURNING *;
+
+-- ROLLBACK; ── will use this when we have to revert the transaction of the query
+COMMIT;
+ --   SELECT * FROM books ;

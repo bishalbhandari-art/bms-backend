@@ -9,10 +9,10 @@ VALUES ('F. Scott Fitzgerald', 'fitzgerald@example.com'),
 -- Insert categories
 INSERT INTO categories (name)
 VALUES ('Fiction'),
-    ('Dystopian'),
-    ('Romance'),
-    ('Classic'),
-    ('Fantasy');
+    ('Non-Fiction'),
+    ('Science Fiction'),
+    ('Mystery'),
+    ('Classic');
 -- Insert books
 INSERT INTO books (
         title,
@@ -26,7 +26,7 @@ INSERT INTO books (
     )
 VALUES (
         'The Great Gatsby',
-        '978-0-7432-7356-5',
+        9780743273565,
         '1925-04-10',
         'Printed',
         180,
@@ -36,7 +36,7 @@ VALUES (
     ),
     (
         'Tender Is the Night',
-        '978-0-6848-0154-6',
+        9780684801546,
         '1934-04-12',
         'EBook',
         315,
@@ -46,7 +46,7 @@ VALUES (
     ),
     (
         '1984',
-        '978-0-4511-5245-8',
+        9780451152458,
         '1949-06-08',
         'Printed',
         328,
@@ -56,7 +56,7 @@ VALUES (
     ),
     (
         'Animal Farm',
-        '978-0-4511-5244-1',
+        9780451152441,
         '1945-08-17',
         'EBook',
         112,
@@ -66,7 +66,7 @@ VALUES (
     ),
     (
         'Pride and Prejudice',
-        '978-0-1413-9518-2',
+        9780141395182,
         '1813-01-28',
         'Printed',
         432,
@@ -76,7 +76,7 @@ VALUES (
     ),
     (
         'Sense and Sensibility',
-        '978-0-1413-9967-8',
+        9780141399678,
         '1811-10-30',
         'EBook',
         409,
@@ -86,7 +86,7 @@ VALUES (
     ),
     (
         'Emma',
-        '978-0-1413-9946-3',
+        9780141399463,
         '1815-12-23',
         'Printed',
         474,
@@ -96,7 +96,7 @@ VALUES (
     ),
     (
         'To Kill a Mockingbird',
-        '978-0-0612-0008-8',
+        9780061200088,
         '1960-07-11',
         'Printed',
         281,
@@ -106,7 +106,7 @@ VALUES (
     ),
     (
         'Go Set a Watchman',
-        '978-0-0624-0985-0',
+        9780062409850,
         '2015-07-14',
         'EBook',
         278,
@@ -116,7 +116,7 @@ VALUES (
     ),
     (
         'The Hobbit',
-        '978-0-5474-2867-9',
+        9780547428679,
         '1937-09-21',
         'Printed',
         310,
@@ -126,7 +126,7 @@ VALUES (
     ),
     (
         'The Fellowship of the Ring',
-        '978-0-5474-2868-6',
+        9780547428686,
         '1954-07-29',
         'Printed',
         423,
@@ -136,7 +136,7 @@ VALUES (
     ),
     (
         'The Two Towers',
-        '978-0-5474-2869-3',
+        9780547428693,
         '1954-11-11',
         'EBook',
         352,

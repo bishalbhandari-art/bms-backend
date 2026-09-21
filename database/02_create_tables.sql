@@ -1,14 +1,14 @@
 -- BMS Database — Table Creation
 -- Creates three tables: authors, categories, books
 -- Drop tables if they already exist (reverse dependency order)
-DROP TABLE IF EXISTS books;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS authors;
+DROP TABLE IF EXISTS books CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS authors CASCADE;
 -- Authors table
 CREATE TABLE authors (
     author_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE
+    email VARCHAR(150) NOT NULL UNIQUE
 );
 -- Categories table
 CREATE TABLE categories (
@@ -19,11 +19,11 @@ CREATE TABLE categories (
 CREATE TABLE books (
     id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
-    isbn VARCHAR(20) NOT NULL UNIQUE,
+    isbn NUMERIC NOT NULL UNIQUE, 
     publish_date DATE,
     book_type VARCHAR(20) CHECK (book_type IN ('Printed', 'EBook')),
     page_count INTEGER CHECK (page_count > 0),
-    file_size VARCHAR(20),
+    file_size VARCHAR(20), 
     author_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
     CONSTRAINT fk_book_author FOREIGN KEY (author_id) REFERENCES authors (author_id) ON DELETE RESTRICT,

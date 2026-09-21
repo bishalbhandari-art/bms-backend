@@ -20,9 +20,10 @@ bms-postgresql/
 │   ├── 01_create_database.sql
 │   ├── 02_create_tables.sql
 │   ├── 03_insert_data.sql
-│   ├── 04_queries.sql
-│   └── backups/
-│       └── bms_backup.sql
+│   └── 04_queries.sql
+│
+├── backups/
+│   └── bms_backup.sql
 │
 ├── README.md
 └── .gitignore
