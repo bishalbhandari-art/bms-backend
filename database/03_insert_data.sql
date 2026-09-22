@@ -1,5 +1,6 @@
 -- BMS Database — Insert Sample Data
 -- Insert authors
+TRUNCATE books, categories, authors RESTART IDENTITY CASCADE;
 INSERT INTO authors (name, email)
 VALUES ('F. Scott Fitzgerald', 'fitzgerald@example.com'),
     ('George Orwell', 'orwell@example.com'),
@@ -40,7 +41,7 @@ VALUES (
         '1934-04-12',
         'EBook',
         315,
-        '2.5 MB',
+        2.50,
         1,
         1
     ),
@@ -60,7 +61,7 @@ VALUES (
         '1945-08-17',
         'EBook',
         112,
-        '1.2 MB',
+        1.20,
         2,
         2
     ),
@@ -80,7 +81,7 @@ VALUES (
         '1811-10-30',
         'EBook',
         409,
-        '3.1 MB',
+        3.10,
         3,
         3
     ),
@@ -110,7 +111,7 @@ VALUES (
         '2015-07-14',
         'EBook',
         278,
-        '2.8 MB',
+        2.80,
         4,
         1
     ),
@@ -140,7 +141,7 @@ VALUES (
         '1954-11-11',
         'EBook',
         352,
-        '3.5 MB',
+        3.50,
         5,
         5
     );
