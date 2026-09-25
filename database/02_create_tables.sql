@@ -8,12 +8,16 @@ DROP TABLE IF EXISTS authors CASCADE;
 CREATE TABLE authors (
     author_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE
+    email VARCHAR(150) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 -- Categories table
 CREATE TABLE categories (
     category_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 -- Books table (references authors and categories)
 CREATE TABLE books (
@@ -30,6 +34,8 @@ CREATE TABLE books (
     file_size NUMERIC(6, 2) CHECK (file_size > 0),
     author_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     -- Only EBooks have a file: an EBook must carry a size, a Printed book must not.
     CONSTRAINT chk_ebook_file_size CHECK (
         (book_type = 'EBook' AND file_size IS NOT NULL)
