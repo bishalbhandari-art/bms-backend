@@ -20,9 +20,10 @@ bms-postgresql/
 │   ├── 01_create_database.sql
 │   ├── 02_create_tables.sql
 │   ├── 03_insert_data.sql
-│   ├── 04_queries.sql
-│   └── backups/
-│       └── bms_backup.sql
+│   └── 04_queries.sql
+│
+├── backups/
+│   └── bms_backup.sql
 │
 ├── README.md
 └── .gitignore
@@ -76,10 +77,10 @@ bms-postgresql/
 
 ```bash
 # Create backup
-pg_dump -U postgres -d bms_database -F p -f database/backups/bms_backup.sql
+pg_dump -U postgres -d bms_database -F p -f backups/bms_backup.sql
 
 # Restore from backup
-psql -U postgres -d bms_database -f database/backups/bms_backup.sql
+psql -U postgres -d bms_database -f backups/bms_backup.sql
 ```
 
 ### GitHub
