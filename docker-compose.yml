@@ -1,0 +1,251 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: bms-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  # RabbitMQ message broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: bms-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# OpenSearch logging
+  opensearch:
+    image: opensearchproject/opensearch:3.9.0
+    container_name: bms-opensearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+  # OpenSearch dashboard
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.9.0
+    container_name: bms-opensearch-dashboards
+    restart: unless-stopped
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+    ports:
+      - "127.0.0.1:5601:5601"
+    depends_on:
+      - opensearch
+
+# Prometheus metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bms-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+  # Grafana dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bms-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    ports:
+      - "127.0.0.1:3005:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+  # Jaeger distributed tracing
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.22.0
+    container_name: bms-jaeger
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+
+ # Books microservice
+  books-service:
+    build:
+      context: ./services/books-service
+      dockerfile: Dockerfile
+    container_name: bms-books-service
+    restart: unless-stopped
+    env_file:
+      - ./services/books-service/.env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      OPENSEARCH_NODE: http://opensearch:9200
+      OTEL_SERVICE_NAME: books-service
+      AUTHORS_SERVICE_URL: http://authors-service:3000
+      CATEGORIES_SERVICE_URL: http://categories-service:3000
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+  # Authors microservice
+  authors-service:
+    build:
+      context: ./services/authors-service
+      dockerfile: Dockerfile
+    container_name: bms-authors-service
+    restart: unless-stopped
+    env_file:
+      - ./services/authors-service/.env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      OPENSEARCH_NODE: http://opensearch:9200
+      OTEL_SERVICE_NAME: authors-service
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+    ports:
+      - "3002:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+      jaeger:
+        condition: service_started
+
+  # Categories microservice
+  categories-service:
+    build:
+      context: ./services/categories-service
+      dockerfile: Dockerfile
+    container_name: bms-categories-service
+    restart: unless-stopped
+    env_file:
+      - ./services/categories-service/.env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      OPENSEARCH_NODE: http://opensearch:9200
+      OTEL_SERVICE_NAME: categories-service
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+    ports:
+      - "3003:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+      jaeger:
+        condition: service_started
+
+  # Book events consumer
+  book-events-consumer:
+    build:
+      context: ./services/book-events-consumer
+      dockerfile: Dockerfile
+    container_name: bms-book-events-consumer
+    restart: unless-stopped
+    env_file:
+      - ./services/book-events-consumer/.env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      OPENSEARCH_NODE: http://opensearch:9200
+      OTEL_SERVICE_NAME: book-events-consumer
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+    ports:
+      - "3004:3000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+      jaeger:
+        condition: service_started
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: bms-api-gateway
+    restart: unless-stopped
+    env_file:
+      - ./services/api-gateway/.env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      BOOKS_SERVICE_URL: http://books-service:3000
+      AUTHORS_SERVICE_URL: http://authors-service:3000
+      CATEGORIES_SERVICE_URL: http://categories-service:3000
+      OPENSEARCH_NODE: http://opensearch:9200
+      OTEL_SERVICE_NAME: api-gateway
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+    ports:
+      - "3000:3000"
+    depends_on:
+      books-service:
+        condition: service_started
+      authors-service:
+        condition: service_started
+      categories-service:
+        condition: service_started
+      opensearch:
+        condition: service_started
+      jaeger:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  opensearch_data:
+  prometheus_data:
+  grafana_data:
